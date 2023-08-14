@@ -3,7 +3,6 @@ import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert } from '@mui/material';
 import useGps from '../../hooks/useGps'
 
-
 // Marker object's icon property of the User
 const userIcon = { 
   fillColor: '#4285F4',
@@ -20,13 +19,14 @@ const alertStyle ={
   width: '100%'
 }
 
+// default zoom level
 const DEFAULT_ZOOM = 18;
+
 
 export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
-
   
   // this fixes google chrome mobile issue with page height being > screen height
   const mapStyle = useMemo(() => ({
@@ -52,7 +52,7 @@ export default function MapContainer() {
 
 
   useEffect(() => {
-    // pan the map if gps position changes and panMap === true
+    // pan the map if gps position changes
     if (position && googleMap){
       googleMap.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
 
@@ -62,7 +62,6 @@ export default function MapContainer() {
   },[position, googleMap]);
 
 
-
   return (
     <>
       {position && isLoaded && !loadError && !gpsError &&
@@ -70,15 +69,20 @@ export default function MapContainer() {
           mapContainerStyle={mapStyle}
           options={{ 
             disableDefaultUI: true,
-            mapId: '8dce6158aa71a36a'
+            mapId: process.env.REACT_APP_GOOGLE_MAPS_API_MAP_ID
           }}
           onLoad={onLoad}
         >
           <Marker
-            position={{lat: position.coords.latitude, lng: position.coords.longitude}} 
-            icon={{...userIcon, path: window.google.maps.SymbolPath.CIRCLE}}
+            position={{
+              lat: position.coords.latitude, 
+              lng: position.coords.longitude
+            }} 
+            icon={{
+              ...userIcon, 
+              path: window.google.maps.SymbolPath.CIRCLE
+            }}
           />
-
         </GoogleMap>}
 
       {(!isLoaded || !position) && 
