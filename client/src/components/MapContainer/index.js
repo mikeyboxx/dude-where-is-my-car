@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
-import { CircularProgress, Alert } from '@mui/material';
+import { CircularProgress, Alert, Fab } from '@mui/material';
+import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import useGps from '../../hooks/useGps'
 
 // Marker object's icon property of the User
@@ -27,6 +28,7 @@ export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
+  const [parking, setParking] = useState(null);
   
   // this fixes google chrome mobile issue with page height being > screen height
   const mapStyle = useMemo(() => ({
@@ -49,6 +51,16 @@ export default function MapContainer() {
     
     setGoogleMap(gMap);
   },[position]);
+
+  const btnHandler = () => {
+    if (!parking){
+      setParking({
+        lat: position?.coords.latitude,
+        lng: position?.coords.longitude
+      });
+    } else 
+      setParking(null);
+  }
 
 
   useEffect(() => {
@@ -73,6 +85,18 @@ export default function MapContainer() {
           }}
           onLoad={onLoad}
         >
+          <Fab
+            variant="extended"
+            color={parking ? "error" : "success"}
+            onClick={btnHandler}
+            sx={{
+              boxShadow: 20,
+              m: 2
+            }}
+          >
+            <TimeToLeaveIcon sx={{mr: 1}} />
+            {parking ? "Cancel Parking" : "Park Car"}
+          </Fab>
           <Marker
             position={{
               lat: position.coords.latitude, 

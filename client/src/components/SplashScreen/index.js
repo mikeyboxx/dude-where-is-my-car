@@ -33,10 +33,11 @@ export default function SplashScreen({setConsent}) {
         sx={{
           m: '1em',
           width: 250,
-          height: 65,
+          height: 55,
           borderRadius: 12,
           fontSize: 20,
-          fontWeight: 600
+          fontWeight: 600,
+          boxShadow: 20
         }}
       >
         ENTER
