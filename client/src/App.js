@@ -1,6 +1,6 @@
-import MapContainer from "./components/MapContainer";
 import { useState } from 'react';
-import { Button } from "@mui/material";
+import MapContainer from "./components/MapContainer";
+import SplashScreen from "./components/SplashScreen";
 
 function App() {
   // console.log('App');
@@ -10,12 +10,9 @@ function App() {
     <>
     {consent === true
       ? <MapContainer/> 
-      : <Button onClick={()=>setConsent(true)}>Yoyoyo</Button>}
+      : <SplashScreen setConsent={setConsent} />
+    }
     </>
-    // // <Typography variant="h1" color="primary">
-    // //   Hello World
-    // // </Typography>
-    // <MapContainer/>
   );
 }
 

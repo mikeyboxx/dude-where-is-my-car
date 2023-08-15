@@ -5,7 +5,7 @@ import { orange, blue } from "@mui/material/colors";
 import App from './App';
 
 const theme = createTheme({
-  pallete: {
+  palette: {
     primary: {
       main: blue[500]
     },
@@ -15,7 +15,6 @@ const theme = createTheme({
   }
 });
 const root = createRoot(document.getElementById('root'));
-
 
 
 root.render(
