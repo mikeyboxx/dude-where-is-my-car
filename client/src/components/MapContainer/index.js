@@ -13,6 +13,14 @@ const userIcon = {
   strokeWeight: 4,
 };
 
+const carIcon = { 
+  fillColor: "black",
+  fillOpacity: .7,
+  scale: 1.5,
+  path: "M19,9.5h-.32L17.43,6.38A3,3,0,0,0,14.65,4.5h-6A3,3,0,0,0,5.7,6.91L5.18,9.5H5a3,3,0,0,0-3,3v3a1,1,0,0,0,1,1H4a3,3,0,0,0,6,0h4a3,3,0,0,0,6,0h1a1,1,0,0,0,1-1v-3A3,3,0,0,0,19,9.5Zm-6-3h1.65a1,1,0,0,1,.92.63l.95,2.37H13Zm-5.34.8a1,1,0,0,1,1-.8H11v3H7.22ZM7,17.5a1,1,0,1,1,1-1A1,1,0,0,1,7,17.5Zm10,0a1,1,0,1,1,1-1A1,1,0,0,1,17,17.5Zm3-3h-.78a3,3,0,0,0-4.44,0H9.22a3,3,0,0,0-4.44,0H4v-2a1,1,0,0,1,1-1H19a1,1,0,0,1,1,1Z",
+};
+
+
 // Error Alert styles
 const alertStyle ={
   position: 'absolute', 
@@ -25,7 +33,6 @@ const DEFAULT_ZOOM = 18;
 
 
 export default function MapContainer() {
-  console.log("process.env=", process.env)
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
@@ -54,6 +61,7 @@ export default function MapContainer() {
   },[position]);
 
   const btnHandler = () => {
+    console.log(parking);
     if (!parking){
       setParking({
         lat: position?.coords.latitude,
@@ -98,6 +106,15 @@ export default function MapContainer() {
             <TimeToLeaveIcon sx={{mr: 1}} />
             {parking ? "Cancel Parking" : "Park Car"}
           </Fab>
+          { parking && 
+          <Marker
+            position={{
+              ...parking
+            }} 
+            icon={{
+              ...carIcon
+            }}
+          />}
           <Marker
             position={{
               lat: position.coords.latitude, 
