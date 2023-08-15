@@ -25,6 +25,7 @@ const DEFAULT_ZOOM = 18;
 
 
 export default function MapContainer() {
+  console.log("process.env=", process.env)
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
