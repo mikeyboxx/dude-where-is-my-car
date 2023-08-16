@@ -40,7 +40,7 @@ export default function MapContainer() {
   const {position, gpsError} = useGps();
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
-  const {data} = useQuery(
+  const {data, loading} = useQuery(
     QUERY_PARKED_CARS, 
     {
       fetchPolicy: 'network-only',
@@ -157,7 +157,7 @@ export default function MapContainer() {
             }}
           />}
 
-        {data?.parkedCars
+        {!loading && data?.parkedCars
           ?.filter(car => car._id !== parking?.id)
           ?.map((car, idx) => 
           <Marker
