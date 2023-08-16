@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useMutation } from '@apollo/client';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert, Fab } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import useGps from '../../hooks/useGps'
+import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
 
 // Marker object's icon property of the User
 const userIcon = { 
@@ -35,6 +37,8 @@ const DEFAULT_ZOOM = 18;
 export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
+  const [addParkedCar] = useMutation(ADD_PARKED_CAR);
+  const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
   const [googleMap, setGoogleMap] = useState(null);
   const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   
@@ -60,13 +64,37 @@ export default function MapContainer() {
     setGoogleMap(gMap);
   },[position]);
 
-  const btnHandler = () => {
+  const btnHandler = async () => {
     if (!parking){
-      setParking({
-        lat: position?.coords.latitude,
-        lng: position?.coords.longitude
-      });
+      let parkedCar;
+      try {
+        parkedCar = await addParkedCar({
+          variables: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }});
+        } 
+        catch (error) {
+          console.log(error);
+        }
+
+        setParking({
+          lat: position?.coords.latitude,
+          lng: position?.coords.longitude,
+          id: parkedCar.data.addParkedCar._id
+        });
+
     } else {
+      try {
+        await deleteParkedCar({
+          variables: {
+            id: parking.id,
+          }});
+        } 
+        catch (error) {
+          console.log(error);
+        }
+
       setParking(null);
     }
   }

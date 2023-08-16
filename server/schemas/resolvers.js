@@ -14,7 +14,6 @@ const resolvers = {
         parkedCar = await ParkedCar.create(
           args,
         );
-          console.log(parkedCar)
       } 
       catch (error) {
         console.log(error);
