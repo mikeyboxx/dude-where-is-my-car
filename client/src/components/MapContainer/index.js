@@ -40,11 +40,11 @@ export default function MapContainer() {
   const {position, gpsError} = useGps();
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
-  const {data, error, loading} = useQuery(
+  const {data} = useQuery(
     QUERY_PARKED_CARS, 
     {
       fetchPolicy: 'network-only',
-      pollInterval: 5000,
+      // pollInterval: 5000,
     }
   );
   const [googleMap, setGoogleMap] = useState(null);
@@ -145,17 +145,21 @@ export default function MapContainer() {
             <TimeToLeaveIcon sx={{mr: 1}} />
             {parking ? "Cancel Parking" : "Park Car"}
           </Fab>
-          {/* { parking && 
+
+          { parking && 
           <Marker
             position={{
-              ...parking
+              lat: parking.lat,
+              lng: parking.lng
             }} 
             icon={{
               ...carIcon
             }}
-          />} */}
+          />}
 
-        {data?.parkedCars?.map((car, idx) => 
+        {data?.parkedCars
+          ?.filter(car => car._id !== parking?.id)
+          ?.map((car, idx) => 
           <Marker
               key={idx}
               position={{
