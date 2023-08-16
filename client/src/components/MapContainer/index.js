@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert, Fab } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import useGps from '../../hooks/useGps'
 import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
+import { QUERY_PARKED_CARS } from '../../utils/queries';
 
 // Marker object's icon property of the User
 const userIcon = { 
@@ -39,6 +40,13 @@ export default function MapContainer() {
   const {position, gpsError} = useGps();
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
+  const {data, error, loading} = useQuery(
+    QUERY_PARKED_CARS, 
+    {
+      fetchPolicy: 'network-only',
+      pollInterval: 5000,
+    }
+  );
   const [googleMap, setGoogleMap] = useState(null);
   const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   
@@ -137,7 +145,7 @@ export default function MapContainer() {
             <TimeToLeaveIcon sx={{mr: 1}} />
             {parking ? "Cancel Parking" : "Park Car"}
           </Fab>
-          { parking && 
+          {/* { parking && 
           <Marker
             position={{
               ...parking
@@ -145,7 +153,21 @@ export default function MapContainer() {
             icon={{
               ...carIcon
             }}
-          />}
+          />} */}
+
+        {data?.parkedCars?.map((car, idx) => 
+          <Marker
+              key={idx}
+              position={{
+                lat: car.lat,
+                lng: car.lng
+              }} 
+              icon={{
+                ...carIcon
+              }}
+            />
+        )}
+          
           <Marker
             position={{
               lat: position.coords.latitude, 
