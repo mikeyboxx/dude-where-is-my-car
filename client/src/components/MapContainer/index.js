@@ -36,7 +36,7 @@ export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
-  const [parking, setParking] = useState(null);
+  const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   
   // this fixes google chrome mobile issue with page height being > screen height
   const mapStyle = useMemo(() => ({
@@ -61,16 +61,19 @@ export default function MapContainer() {
   },[position]);
 
   const btnHandler = () => {
-    console.log(parking);
     if (!parking){
       setParking({
         lat: position?.coords.latitude,
         lng: position?.coords.longitude
       });
-    } else 
+    } else {
       setParking(null);
+    }
   }
 
+  useEffect(()=>{
+    localStorage.setItem('parking', JSON.stringify(parking));
+  },[parking]);
 
   useEffect(() => {
     // pan the map if gps position changes
