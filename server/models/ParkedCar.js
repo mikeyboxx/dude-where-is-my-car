@@ -27,13 +27,13 @@ parkedCarSchema
     return `${new Date(this.createdAt).toISOString()}`;
   })
 
-noteSchema
+parkedCarSchema
   .virtual('updatedTs')
   .get(function () {
     return `${new Date(this.updatedAt).toISOString()}`;
   })
 
-const ParkedCar = mongoose.model('ParkedCar', noteSchema);
+const ParkedCar = mongoose.model('ParkedCar', parkedCarSchema);
 
 module.exports = ParkedCar;
 

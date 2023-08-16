@@ -8,19 +8,25 @@ const resolvers = {
 
   Mutation: {
     addParkedCar: async (parent, args) => {
+      let parkedCar;
+
       try {
-        const parkedCar = await ParkedCar.create(args);
+        parkedCar = await ParkedCar.create(
+          args,
+        );
+          console.log(parkedCar)
       } 
       catch (error) {
         console.log(error);
       }
 
-      return { parkedCar };
+      return parkedCar;
     },
 
     deleteParkedCar: async (parent, args) => {
+      let deletedParkedCar;
       try {
-        const deletedParkedCar = await ParkedCar.findById(
+        deletedParkedCar = await ParkedCar.findById(
           { _id: args.id },
         );
       
@@ -32,7 +38,7 @@ const resolvers = {
         console.log(error);
       }
 
-      return { deletedParkedCar };
+      return deletedParkedCar;
     },
   }
 };

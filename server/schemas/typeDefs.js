@@ -18,7 +18,7 @@ const typeDefs = gql`
       lng: Float!): ParkedCar 
 
     deleteParkedCar(
-      _id: ID! ): ParkedCar 
+      id: ID! ): ParkedCar 
   }
 `;
 
