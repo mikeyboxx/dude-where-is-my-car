@@ -44,7 +44,7 @@ export default function MapContainer() {
     QUERY_PARKED_CARS, 
     {
       fetchPolicy: 'network-only',
-      // pollInterval: 5000,
+      pollInterval: 1000,
     }
   );
   const [googleMap, setGoogleMap] = useState(null);
