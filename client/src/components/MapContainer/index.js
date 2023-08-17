@@ -4,8 +4,8 @@ import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert, Fab } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import useGps from '../../hooks/useGps'
-import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
 import { QUERY_PARKED_CARS } from '../../utils/queries';
+import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
 
 // Marker object's icon property of the User
 const userIcon = { 
@@ -38,6 +38,9 @@ const DEFAULT_ZOOM = 18;
 export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
+  const [googleMap, setGoogleMap] = useState(null);
+  const [panMap, setPanMap] = useState(true);
+  const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
   const {data, loading} = useQuery(
@@ -47,8 +50,6 @@ export default function MapContainer() {
       pollInterval: 1000,
     }
   );
-  const [googleMap, setGoogleMap] = useState(null);
-  const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   
   // this fixes google chrome mobile issue with page height being > screen height
   const mapStyle = useMemo(() => ({
@@ -71,6 +72,18 @@ export default function MapContainer() {
     
     setGoogleMap(gMap);
   },[position]);
+
+   // do not pan map if map is dragged
+   const onDragEnd = useCallback(() => {
+    setPanMap(false);
+  },[])
+  
+  // do not pan map if map is zoomed
+  const onIdle = useCallback(() => {
+    if (googleMap.getZoom() !== DEFAULT_ZOOM){
+      setPanMap(false);
+    }
+  },[googleMap]);
 
   const btnHandler = async () => {
     if (!parking){
@@ -113,13 +126,17 @@ export default function MapContainer() {
 
   useEffect(() => {
     // pan the map if gps position changes
-    if (position && googleMap){
+    if (position && googleMap && panMap){
       googleMap.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
 
       // change heading only if GPS accuracy is more precise
       position.coords.accuracy < 10 && googleMap.setHeading(position.coords.heading);
     }
-  },[position, googleMap]);
+
+    if (panMap && googleMap && googleMap.getZoom() !== DEFAULT_ZOOM) { 
+      googleMap.setZoom(DEFAULT_ZOOM);
+    }
+  },[position, googleMap, panMap]);
 
 
   return (
@@ -132,6 +149,8 @@ export default function MapContainer() {
             mapId: process.env.REACT_APP_GOOGLE_MAPS_API_MAP_ID
           }}
           onLoad={onLoad}
+          onDragEnd={onDragEnd}
+          nIdle={onIdle}
         >
           <Fab
             variant="extended"
