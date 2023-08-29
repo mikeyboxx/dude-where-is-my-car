@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert, Fab } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
+import SearchIcon from '@mui/icons-material/Search';
 import useGps from '../../hooks/useGps'
 import { QUERY_PARKED_CARS } from '../../utils/queries';
 import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
@@ -39,7 +40,8 @@ export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
-  const [panMap, setPanMap] = useState(true);
+  const [panMap, setPanMap] = useState(false);
+  const [panCar, setPanCar] = useState(false);
   const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
@@ -50,7 +52,7 @@ export default function MapContainer() {
       pollInterval: 1000,
     }
   );
-  
+
   // this fixes google chrome mobile issue with page height being > screen height
   const mapStyle = useMemo(() => ({
     height: 
@@ -75,7 +77,8 @@ export default function MapContainer() {
 
    // do not pan map if map is dragged
    const onDragEnd = useCallback(() => {
-    setPanMap(false);
+     setPanMap(false);
+     setPanCar(false);
   },[])
   
   // do not pan map if map is zoomed
@@ -85,7 +88,9 @@ export default function MapContainer() {
     }
   },[googleMap]);
 
-  const btnHandler = async () => {
+  const btnParkCarHandler = async (e) => {
+    e.preventDefault();
+
     if (!parking){
       let parkedCar;
       try {
@@ -111,6 +116,7 @@ export default function MapContainer() {
           variables: {
             id: parking.id,
           }});
+        setPanCar(false);
         } 
         catch (error) {
           console.log(error);
@@ -118,6 +124,15 @@ export default function MapContainer() {
 
       setParking(null);
     }
+  }
+
+  const btnFindCarHandler = async (e) => {
+    e.preventDefault();
+
+    setPanCar(true);
+    setPanMap(false);
+    // googleMap.setZoom(DEFAULT_ZOOM);
+    googleMap.panTo({lat: parking.lat, lng: parking.lng});
   }
 
   useEffect(()=>{
@@ -133,10 +148,14 @@ export default function MapContainer() {
       position.coords.accuracy < 10 && googleMap.setHeading(position.coords.heading);
     }
 
-    if (panMap && googleMap && googleMap.getZoom() !== DEFAULT_ZOOM) { 
+    if (parking && googleMap && panCar){
+      googleMap.panTo({lat: parking.lat, lng: parking.lng});
+    }
+
+    if ((panMap || panCar) && googleMap && googleMap.getZoom() !== DEFAULT_ZOOM) { 
       googleMap.setZoom(DEFAULT_ZOOM);
     }
-  },[position, googleMap, panMap]);
+  },[position, parking, googleMap, panMap, panCar]);
 
 
   return (
@@ -155,7 +174,7 @@ export default function MapContainer() {
           <Fab
             variant="extended"
             color={parking ? "error" : "success"}
-            onClick={btnHandler}
+            onClick={btnParkCarHandler}
             sx={{
               boxShadow: 20,
               m: 2
@@ -165,16 +184,32 @@ export default function MapContainer() {
             {parking ? "Cancel Parking" : "Park Car"}
           </Fab>
 
-          { parking && 
-          <Marker
-            position={{
-              lat: parking.lat,
-              lng: parking.lng
-            }} 
-            icon={{
-              ...carIcon
-            }}
-          />}
+          {parking &&
+            <>
+              <Fab
+                variant="extended"
+                color="info"
+                onClick={btnFindCarHandler}
+                sx={{
+                  boxShadow: 20,
+                  m: 2
+                }}
+              >
+                <SearchIcon sx={{mr: 1}} />
+                Find Car
+              </Fab>
+
+              <Marker
+                position={{
+                  lat: parking.lat,
+                  lng: parking.lng
+                }} 
+                icon={{
+                  ...carIcon
+                }}
+              />
+            </> 
+          }
 
         {!loading && data?.parkedCars
           ?.filter(car => car._id !== parking?.id)
