@@ -154,10 +154,11 @@ export default function MapContainer() {
           <Fab
             variant="extended"
             color="info"
+            size="small"
             onClick={btnFindMeHandler}
             sx={{
               boxShadow: 20,
-              m: 2
+              m: 1
             }}
           >
             <LocationOnIcon sx={{mr: 1}} />
@@ -167,14 +168,15 @@ export default function MapContainer() {
           <Fab
             variant="extended"
             color={parking ? "error" : "success"}
+            size="small"
             onClick={btnParkCarHandler}
             sx={{
               boxShadow: 20,
-              m: 2
+              m: 1
             }}
           >
             <TimeToLeaveIcon sx={{mr: 1}} />
-            {parking ? "Cancel Parking" : "Park Car"}
+            {parking ? "Cancel" : "Park Car"}
           </Fab>
 
 
@@ -183,10 +185,11 @@ export default function MapContainer() {
               <Fab
                 variant="extended"
                 color="info"
+                size="small"
                 onClick={btnFindCarHandler}
                 sx={{
                   boxShadow: 20,
-                  m: 2
+                  m: 1
                 }}
               >
                 <SearchIcon sx={{mr: 1}} />
