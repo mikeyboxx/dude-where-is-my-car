@@ -4,6 +4,7 @@ import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
 import { CircularProgress, Alert, Fab } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import SearchIcon from '@mui/icons-material/Search';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import useGps from '../../hooks/useGps'
 import { QUERY_PARKED_CARS } from '../../utils/queries';
 import { ADD_PARKED_CAR, DELETE_PARKED_CAR } from '../../utils/mutations';
@@ -40,8 +41,6 @@ export default function MapContainer() {
   const {isLoaded, loadError} = useJsApiLoader({ googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY });
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
-  const [panMap, setPanMap] = useState(false);
-  const [panCar, setPanCar] = useState(false);
   const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
@@ -75,18 +74,6 @@ export default function MapContainer() {
     setGoogleMap(gMap);
   },[position]);
 
-   // do not pan map if map is dragged
-   const onDragEnd = useCallback(() => {
-     setPanMap(false);
-     setPanCar(false);
-  },[])
-  
-  // do not pan map if map is zoomed
-  const onIdle = useCallback(() => {
-    if (googleMap.getZoom() !== DEFAULT_ZOOM){
-      setPanMap(false);
-    }
-  },[googleMap]);
 
   const btnParkCarHandler = async (e) => {
     e.preventDefault();
@@ -116,7 +103,6 @@ export default function MapContainer() {
           variables: {
             id: parking.id,
           }});
-        setPanCar(false);
         } 
         catch (error) {
           console.log(error);
@@ -129,33 +115,29 @@ export default function MapContainer() {
   const btnFindCarHandler = async (e) => {
     e.preventDefault();
 
-    setPanCar(true);
-    setPanMap(false);
-    // googleMap.setZoom(DEFAULT_ZOOM);
     googleMap.panTo({lat: parking.lat, lng: parking.lng});
+    googleMap.setZoom(DEFAULT_ZOOM);
   }
 
+  const btnFindMeHandler = async (e) => {
+    e.preventDefault();
+
+    googleMap.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
+    googleMap.setZoom(DEFAULT_ZOOM);
+  }
+
+  // save to local storage
   useEffect(()=>{
     localStorage.setItem('parking', JSON.stringify(parking));
   },[parking]);
 
-  useEffect(() => {
-    // pan the map if gps position changes
-    if (position && googleMap && panMap){
-      googleMap.panTo({lat: position.coords.latitude, lng: position.coords.longitude});
 
-      // change heading only if GPS accuracy is more precise
+  // change the heading of the map if users gps position changes
+  useEffect(() => {
+    if (position && googleMap){
       position.coords.accuracy < 10 && googleMap.setHeading(position.coords.heading);
     }
-
-    if (parking && googleMap && panCar){
-      googleMap.panTo({lat: parking.lat, lng: parking.lng});
-    }
-
-    if ((panMap || panCar) && googleMap && googleMap.getZoom() !== DEFAULT_ZOOM) { 
-      googleMap.setZoom(DEFAULT_ZOOM);
-    }
-  },[position, parking, googleMap, panMap, panCar]);
+  },[position, googleMap]);
 
 
   return (
@@ -168,9 +150,20 @@ export default function MapContainer() {
             mapId: process.env.REACT_APP_GOOGLE_MAPS_API_MAP_ID
           }}
           onLoad={onLoad}
-          onDragEnd={onDragEnd}
-          nIdle={onIdle}
         >
+          <Fab
+            variant="extended"
+            color="info"
+            onClick={btnFindMeHandler}
+            sx={{
+              boxShadow: 20,
+              m: 2
+            }}
+          >
+            <LocationOnIcon sx={{mr: 1}} />
+            Find Me
+          </Fab>
+          
           <Fab
             variant="extended"
             color={parking ? "error" : "success"}
@@ -183,6 +176,7 @@ export default function MapContainer() {
             <TimeToLeaveIcon sx={{mr: 1}} />
             {parking ? "Cancel Parking" : "Park Car"}
           </Fab>
+
 
           {parking &&
             <>
