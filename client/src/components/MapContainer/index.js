@@ -207,7 +207,6 @@ export default function MapContainer() {
             {loading && <CircularProgress size={20} sx={{color: "white", m: .5}}/>}
           </Fab>
 
-
           {parking &&
             <Fab
               variant="extended"
