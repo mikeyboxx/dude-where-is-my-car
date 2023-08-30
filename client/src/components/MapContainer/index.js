@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api';
-import { CircularProgress, Alert, Fab, Typography } from '@mui/material';
+import { CircularProgress, Alert, Fab, Typography, Box } from '@mui/material';
 import TimeToLeaveIcon from '@mui/icons-material/TimeToLeave';
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -36,7 +36,7 @@ const alertStyle = {
 // Floating button stylea
 const btnStyle = {
   boxShadow: 20,
-  m: 1
+  m: .5
 }
 
 // default zoom level
@@ -48,14 +48,16 @@ export default function MapContainer() {
   const {position, gpsError} = useGps();
   const [googleMap, setGoogleMap] = useState(null);
   const [orientMap, setOrientMap] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [parking, setParking] = useState(JSON.parse(localStorage.getItem('parking') || null));
   const [addParkedCar] = useMutation(ADD_PARKED_CAR);
   const [deleteParkedCar] = useMutation(DELETE_PARKED_CAR);
-  const {data, loading} = useQuery(
+  
+  const {data, refetch} = useQuery(
     QUERY_PARKED_CARS, 
     {
       fetchPolicy: 'network-only',
-      pollInterval: 1000,
+      pollInterval: 5000,
     }
   );
 
@@ -98,6 +100,8 @@ export default function MapContainer() {
   const btnParkCarHandler = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+
     if (!parking){
       let parkedCar;
       try {
@@ -106,29 +110,32 @@ export default function MapContainer() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           }});
-        } 
-        catch (error) {
-          console.log(error);
-        }
-
+        
+        await refetch();
+        
         setParking({
           lat: position?.coords.latitude,
           lng: position?.coords.longitude,
           id: parkedCar.data.addParkedCar._id
         });
-
+      } 
+      catch (error) {
+        console.log(error);
+      }
     } else {
       try {
         await deleteParkedCar({
           variables: {
             id: parking.id,
           }});
-        } 
-        catch (error) {
-          console.log(error);
-        }
-
-      setParking(null);
+        
+        await refetch();
+        
+        setParking(null);
+      } 
+      catch (error) {
+        console.log(error);
+      }
     }
   }
 
@@ -153,6 +160,9 @@ export default function MapContainer() {
     localStorage.setItem('parking', JSON.stringify(parking));
   },[parking]);
 
+  useEffect(()=>{
+    setLoading(false);
+  },[data]);
 
   // change the heading of the map if users gps position changes, and orientMap flag is true
   useEffect(() => {
@@ -169,7 +179,6 @@ export default function MapContainer() {
           mapContainerStyle={mapStyle}
           options={{ 
             disableDefaultUI: true,
-            mapId: process.env.REACT_APP_GOOGLE_MAPS_API_MAP_ID
           }}
           onLoad={onLoad}
           onIdle={onIdle}
@@ -195,45 +204,22 @@ export default function MapContainer() {
           >
             <TimeToLeaveIcon sx={{mr: 1}} />
             {parking ? "Cancel" : "Park Car"}
+            {loading && <CircularProgress size={20} sx={{color: "white", m: .5}}/>}
           </Fab>
 
 
           {parking &&
-            <>
-              <Fab
-                variant="extended"
-                color="info"
-                size="small"
-                onClick={btnFindCarHandler}
-                sx={btnStyle}
+            <Fab
+              variant="extended"
+              color="info"
+              size="small"
+              onClick={btnFindCarHandler}
+              sx={btnStyle}
               >
-                <SearchIcon sx={{mr: 1}} />
-                Find Car
-              </Fab>
+              <SearchIcon sx={{mr: 1}} />
+              Find Car
+            </Fab>}
 
-              <Marker
-                position={{
-                  lat: parking.lat,
-                  lng: parking.lng
-                }} 
-                icon={carIcon}
-              />
-            </> 
-          }
-
-        {!loading && data?.parkedCars
-          ?.filter(car => car._id !== parking?.id)
-          ?.map((car, idx) => 
-          <Marker
-            key={idx}
-            position={{
-              lat: car.lat,
-              lng: car.lng
-            }} 
-            icon={carIcon}
-          />
-        )}
-          
           <Marker
             position={{
               lat: position.coords.latitude, 
@@ -244,13 +230,27 @@ export default function MapContainer() {
               path: window.google.maps.SymbolPath.CIRCLE
             }}
             />
+
+          {!loading && data?.parkedCars?.map((car, idx) => 
+            <Marker
+              key={idx}
+              position={{
+                lat: car.lat,
+                lng: car.lng
+              }} 
+              icon={carIcon}
+            />)}
         </GoogleMap>}
 
       {(!isLoaded || !position) && 
-        <>
+        <Box sx={{
+          my: 2,
+          display: 'flex', 
+          justifyContent: 'center',}} 
+        >
           <Typography variant="h3" color="white">Loading...</Typography>
           <CircularProgress/>
-        </>}
+        </Box>}
 
       {gpsError && 
         <Alert variant="filled" severity="error" sx={alertStyle}>
